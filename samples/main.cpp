@@ -16,8 +16,8 @@ int main() {
     cout<<'\n';
     cout<<tm<<'\n';
 
-    Sparse_Matrix<int>lol = m * m;
+    Sparse_Matrix<int>lol1 = m * m;
     cout<<'\n';
-    cout<<lol<<'\n';
+    cout<<lol1<<'\n';
     return 0;
 }
