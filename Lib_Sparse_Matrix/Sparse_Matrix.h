@@ -4,7 +4,7 @@
 
 using namespace std;
 
-constexpr int MAX_MATRIX_SIZE = 1000;
+constexpr int MAX_MATRIX_SIZE = 1000000;
 
 bool cmp(const vector<int>&a , const vector<int>&b){
     //a[0] - index , a[1] - row[index], a[2] - col[index]
@@ -13,6 +13,7 @@ bool cmp(const vector<int>&a , const vector<int>&b){
     return a[2]<b[2];
     //Т.е сортируем сначала по убыванию строк, если строки равны, то по убыванию столбцов
 }
+
 template<class T>
 class Sparse_Matrix{
     int size;
@@ -27,6 +28,7 @@ public:
             throw exception();
         size = _size;
         nz = 0;
+        row_index.resize(_size+1, 0);
     }
     Sparse_Matrix(const Sparse_Matrix& obj){
         size = obj.size;
@@ -51,14 +53,15 @@ public:
         }
         return true;
     }
-    T& get(int i , int j){
+    T get(int i , int j){
         if(i < 0 || i>=size || j < 0 || j >= size)
             throw exception();
         for(int k = row_index[i];k<row_index[i+1];k++){
             if(col[k] == j)
                 return val[k];
         }
-        return static_cast<int &>(T{});
+        T tmp{};
+        return tmp;
     }
     void set(int i , int j,T& t){
         if(i < 0 || i>=size || j < 0 || j >= size)
@@ -121,7 +124,31 @@ public:
             return;
         }
     }
+    bool operator==(const Sparse_Matrix<T>& m ){
+        if(nz != m.nz || size != m.size)
+            return false;
+        for(int i = 0;i<=size;i++){
+            if(row_index[i] != m.row_index[i])
+                return false;
+        }
+        for(int i = 0;i<nz;i++){
+            if(val[i]!=m.val[i])
+                return false;
+            if(row[i]!=m.row[i])
+                return false;
+            if(col[i]!=m.col[i])
+                return false;
+        }
+        return true;
+    }
+    bool operator!=(const Sparse_Matrix<T>& m){
+        if(*this == m)
+            return false;
+        return true;
+    }
     Sparse_Matrix<T>& operator=(const Sparse_Matrix<T>&obj){
+        if(*this == obj)
+            return *this;
         (*this).clear();
         size = obj.size;
         nz = obj.nz;
@@ -147,22 +174,90 @@ public:
         }
         return res;
     }
-    Sparse_Matrix<T> operator+(const T& val){
+    Sparse_Matrix<T> operator+(T& value){
         Sparse_Matrix<T>t(*this);
-        for(int i = 0;i<size;i++){
-            t.val[i] += val;
+        for(int i = 0;i<nz;i++){
+            t.val[i] += value;
         }
         return t;
     }
-    Sparse_Matrix<T> operator-(const T& val){
-        return *this + (-val);
+    Sparse_Matrix<T> operator-(T& value){
+        return *this + (-value);
     }
-    Sparse_Matrix<T> operator*(const T& val){
+    Sparse_Matrix<T> operator*(double value){
+        if(value == 0) {
+            Sparse_Matrix<T>t(size);
+            t.row_index.resize(size+1 , 0);
+            return t;
+        }
         Sparse_Matrix<T>t(*this);
-        for(int i = 0;i<size;i++){
-            t.val[i] *= val;
+        for(int i = 0;i<nz;i++){
+            t.val[i] *= value;
         }
         return t;
+    }
+    Sparse_Matrix<T> operator+(Sparse_Matrix<T>&m ){
+        if(size != m.size)
+            throw exception();
+        Sparse_Matrix<T>t(size);
+        int l = 0;
+        int r = 0;
+        t.row_index.resize(size+1,0);
+        while(l < nz && r<m.nz){
+            if(row[l] == m.row[r] && col[l] == m.col[r]){
+                T value = val[l] + m.val[r];
+                if(value != T{}) {
+                    t.val.push_back(value);
+                    t.row.push_back(row[l]);
+                    t.col.push_back(col[l]);
+                    t.nz++;
+                }
+                r++;
+                l++;
+            }
+            else if(row[l] < m.row[r] || (row[l] == m.row[r] && col[l] < m.col[r])){
+                t.val.push_back(val[l]);
+                t.row.push_back(row[l]);
+                t.col.push_back(col[l]);
+                t.nz++;
+                l++;
+            }
+            else{
+                t.val.push_back(m.val[r]);
+                t.row.push_back(m.row[r]);
+                t.col.push_back(m.col[r]);
+                t.nz++;
+                r++;
+            }
+        }
+        while(l < nz){
+            t.val.push_back(val[l]);
+            t.row.push_back(row[l]);
+            t.col.push_back(col[l]);
+            t.nz++;
+            l++;
+        }
+        while(r < m.nz){
+            t.val.push_back(m.val[r]);
+            t.row.push_back(m.row[r]);
+            t.col.push_back(m.col[r]);
+            t.nz++;
+            r++;
+        }
+        t.row_index[0] = 0;
+        int index = 0;
+        for(int i = 0;i<t.size;i++){
+            while(index < t.nz && t.row[index] < i) {
+                index++;
+            }
+            t.row_index[i] = index;
+        }
+        t.row_index[size] = t.nz;
+        return t;
+    }
+    Sparse_Matrix<T> operator-(Sparse_Matrix<T>&m ){
+        Sparse_Matrix<T> tmp = m * (-1.0);
+        return ( (*this) + (tmp) );
     }
     Sparse_Matrix<T> transposition(){
         //Моя реализация транспонирования, хочу чтобы были упорядочены по строкам, и по столбцам
@@ -179,14 +274,15 @@ public:
             t.row[i] = tmp[i][1];
             t.col[i] = tmp[i][2];
         }
-        int cnt = 1;
         t.row_index[0] = 0;
-        for(int i = 1;i<nz;i++){
-            if(t.row[i]!=t.row[i-1])
-                t.row_index[t.row[i]] = cnt;
-            cnt++;
+        int index = 0;
+        for(int i = 0;i<t.size;i++){
+            while(index < t.nz && t.row[index] < i) {
+                index++;
+            }
+            t.row_index[i] = index;
         }
-        t.row_index[size] = cnt;
+        t.row_index[size] = t.nz;
         return t;
     }
     Sparse_Matrix<T> operator*(Sparse_Matrix<T>& m){
@@ -194,10 +290,8 @@ public:
             throw exception();
         Sparse_Matrix<T> tm = m.transposition();
         Sparse_Matrix<T> result(size);
-        result.row_index.resize(size+1);
         T Neutral_element{};
         for(int i = 0;i<size;i++){
-            //Оно робит!!!
             result.row_index[i] = result.nz;
             for(int j = 0;j<size;j++){
                 T res_i_j{};
@@ -221,7 +315,7 @@ public:
                 result.nz++;
             }
         }
-        result.row_index[size] = nz;
+        result.row_index[size] = result.nz;
         return result;
     }
     friend istream& operator>>(istream& in , Sparse_Matrix<T>&obj){
@@ -265,5 +359,4 @@ public:
         }
         return out;
     }
-
 };
