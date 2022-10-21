@@ -187,7 +187,6 @@ public:
     Sparse_Matrix<T> operator*(double value){
         if(value == 0) {
             Sparse_Matrix<T>t(size);
-            t.row_index.resize(size+1 , 0);
             return t;
         }
         Sparse_Matrix<T>t(*this);
