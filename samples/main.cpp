@@ -4,20 +4,11 @@ using namespace std;
 int main() {
     Sparse_Matrix<int>m;
     cin>>m;
-    Sparse_Matrix<int>tm = m.transposition();
-    vector<int>b = {1,2,3};
-    vector<int>res = m*b;
-    for(int i = 0;i<3;i++){
-        cout<<res[i]<<' ';
-    }
-    cout<<'\n';
-    cout<<'\n';
+    int val = 0;
+    m.set(1,0,val);
+    m.set(0,2,val);
+    val = 6;
+    m.set(0,2,val);
     cout<<m<<'\n';
-    cout<<'\n';
-    cout<<tm<<'\n';
-
-    Sparse_Matrix<int>lol1 = m * m;
-    cout<<'\n';
-    cout<<lol1<<'\n';
     return 0;
 }

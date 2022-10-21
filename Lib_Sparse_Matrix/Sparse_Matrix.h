@@ -42,6 +42,85 @@ public:
         val.clear();col.clear();row.clear();row_index.clear();
     }
     int getsize(){return size;}
+    bool is_neutral(int i ,int j){
+        if(i < 0 || i>=size || j < 0 || j >= size)
+            throw exception();
+        for(int k = row_index[i];k<row_index[i+1];k++){
+            if(col[k] == j)
+                return false;
+        }
+        return true;
+    }
+    T& get(int i , int j){
+        if(i < 0 || i>=size || j < 0 || j >= size)
+            throw exception();
+        for(int k = row_index[i];k<row_index[i+1];k++){
+            if(col[k] == j)
+                return val[k];
+        }
+        return static_cast<int &>(T{});
+    }
+    void set(int i , int j,T& t){
+        if(i < 0 || i>=size || j < 0 || j >= size)
+            throw exception();
+        T Neutral_element{};
+        if(t == Neutral_element && is_neutral(i,j))
+            return;
+        if(t != Neutral_element && !is_neutral(i,j)){
+            for(int k = row_index[i];k<row_index[i+1];k++){
+                if(col[k] == j) {
+                    val[k] = t;
+                    return;
+                }
+            }
+        }
+        if(t == Neutral_element){
+            //То мы не нейтральный заменяем на нейтральный элемент
+            //nz уменьшается
+            int index = 0;
+            for(int k = row_index[i];k<row_index[i+1];k++){
+                if(col[k] == j){
+                    index = k;
+                    break;
+                }
+            }
+            for(int k = index;k<nz-1;k++){
+                swap(val[k] , val[k+1]);
+                swap(row[k] , row[k+1]);
+                swap(col[k] , col[k+1]);
+            }
+            val.pop_back();
+            row.pop_back();
+            col.pop_back();
+            nz--;
+            for(int k = i+1;k<=size;k++)
+                row_index[k]--;
+            return;
+        }
+        if(t != Neutral_element){
+            //То мы нейтральный заменяем на нейтральный
+            //nz увеличивается
+            val.push_back(t);
+            row.push_back(i);
+            col.push_back(j);
+            nz++;
+            for(int k =nz-2;k>=0;k--){
+                if(row[k] > row[k+1]){
+                    swap(val[k] , val[k+1]);
+                    swap(row[k] , row[k+1]);
+                    swap(col[k] , col[k+1]);
+                }
+                if(row[k] == row[k+1] && col[k] >col[k+1]){
+                    swap(val[k] , val[k+1]);
+                    swap(row[k] , row[k+1]);
+                    swap(col[k] , col[k+1]);
+                }
+            }
+            for(int k = i+1;k<=size;k++)
+                row_index[k]++;
+            return;
+        }
+    }
     Sparse_Matrix<T>& operator=(const Sparse_Matrix<T>&obj){
         (*this).clear();
         size = obj.size;
@@ -186,6 +265,5 @@ public:
         }
         return out;
     }
-
 
 };
