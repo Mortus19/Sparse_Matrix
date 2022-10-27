@@ -284,3 +284,22 @@ TEST(Sparse_Matrix, cant_multyplay_matrixes_with_not_equal_size)
     Sparse_Matrix<int>m1(3);
     ASSERT_ANY_THROW(Sparse_Matrix<int>m2 = m*m1);
 }
+
+TEST(Sparse_Matrix, transposition)
+{
+    Sparse_Matrix<int>m(3);
+    for(int i = 0;i<3;i++){
+        for(int j =0 ;j<3;j++){
+            m.set(i,j, (i*j+2)%3);
+        }
+    }
+    m.set(0,0,1);
+    m.set(1,2,-3);
+    Sparse_Matrix<int>t = m.transposition_2();
+
+    for(int i = 0;i<3;i++){
+        for(int j = 0;j<3;j++){
+            EXPECT_EQ(m.get(j,i), t.get(i,j));
+        }
+    }
+}

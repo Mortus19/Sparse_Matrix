@@ -33,10 +33,20 @@ public:
     Sparse_Matrix(const Sparse_Matrix& obj){
         size = obj.size;
         nz = obj.nz;
-        copy(obj.val.begin(),obj.val.end(), back_inserter(val));
-        copy(obj.col.begin(),obj.col.end(),back_inserter(col));
-        copy(obj.row.begin(),obj.row.end(),back_inserter(row));
-        copy(obj.row_index.begin(),obj.row_index.end(),back_inserter(row_index));
+        val = obj.val;
+        row = obj.row;
+        col = obj.col;
+        row_index = obj.row_index;
+    }
+    Sparse_Matrix(Sparse_Matrix&& obj) noexcept
+    {
+        size = obj.size;
+        nz = obj.nz;
+        val = obj.val;
+        row = obj.row;
+        col = obj.col;
+        row_index = obj.row_index;
+        obj.clear();
     }
     void clear(){
         size = 0;
@@ -63,7 +73,7 @@ public:
         T tmp{};
         return tmp;
     }
-    void set(int i , int j,T& t){
+    void set(int i , int j,T t){
         if(i < 0 || i>=size || j < 0 || j >= size)
             throw exception();
         T Neutral_element{};
@@ -152,10 +162,21 @@ public:
         (*this).clear();
         size = obj.size;
         nz = obj.nz;
-        copy(obj.val.begin(),obj.val.end(), back_inserter(val));
-        copy(obj.col.begin(),obj.col.end(),back_inserter(col));
-        copy(obj.row.begin(),obj.row.end(),back_inserter(row));
-        copy(obj.row_index.begin(),obj.row_index.end(),back_inserter(row_index));
+        val = obj.val;
+        row = obj.row;
+        col = obj.col;
+        row_index = obj.row_index;
+        return *this;
+    }
+    Sparse_Matrix& operator=(Sparse_Matrix&& obj) noexcept
+    {
+        size = obj.size;
+        nz = obj.nz;
+        val = obj.val;
+        row = obj.row;
+        col = obj.col;
+        row_index = obj.row_index;
+        obj.clear();
         return *this;
     }
     vector<T> operator*(vector<T>&b){
@@ -258,9 +279,8 @@ public:
         Sparse_Matrix<T> tmp = m * (-1.0);
         return ( (*this) + (tmp) );
     }
-    Sparse_Matrix<T> transposition(){
-        //Моя реализация транспонирования, хочу чтобы были упорядочены по строкам, и по столбцам
-        //Будет работать за O(nz * ln(nz) )
+    Sparse_Matrix<T> transposition_2(){
+        //Будет работать за O(nz * ln(nz)) Требует O(nz) памяти
         //так как мы транспонируем матрицу , то row[index] будет col[index] , а col[index] будет row[index]
         vector<vector<int>>tmp(nz);// будет хранить 3 элемента {index , row[index], col[index]};
         for(int i = 0;i<nz;i++){
@@ -272,6 +292,36 @@ public:
             t.val[i] = val[tmp[i][0]];
             t.row[i] = tmp[i][1];
             t.col[i] = tmp[i][2];
+        }
+        t.row_index[0] = 0;
+        int index = 0;
+        for(int i = 0;i<t.size;i++){
+            while(index < t.nz && t.row[index] < i) {
+                index++;
+            }
+            t.row_index[i] = index;
+        }
+        t.row_index[size] = t.nz;
+        return t;
+    }
+    Sparse_Matrix<T> transposition(){
+        //Будет работать за O(nz) , требует O(nz) памяти
+        vector<vector<pair<int,T>>>tmp;
+        tmp.resize(nz);
+        for(int i = 0;i<nz;i++){
+            int to = col[i];
+            int new_col = row[i];
+            tmp[to].push_back({new_col,val[i]});
+        }
+        Sparse_Matrix<T>t(*this);
+        int cur = 0;
+        for(int i = 0;i<nz;i++){
+            for(auto x : tmp[i]){
+                t.val[cur] = x.second;
+                t.row[cur] = i;
+                t.col[cur] = x.first;
+                cur++;
+            }
         }
         t.row_index[0] = 0;
         int index = 0;
