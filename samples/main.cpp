@@ -6,8 +6,8 @@ int main() {
     Sparse_Matrix<int>b(3);
     for(int i = 0;i<3;i++){
         for(int j = 0;j<3;j++){
-            a.set(i,j,(i+j)%2);
-            b.set(i,j,(i+j+1)%2);
+            a.set(i,j,((i+j)*4)%3);
+            b.set(i,j,((i+j)*7)%4);
         }
     }
     cout<<"a:\n";

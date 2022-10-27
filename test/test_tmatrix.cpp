@@ -293,10 +293,9 @@ TEST(Sparse_Matrix, transposition)
             m.set(i,j, (i*j+2)%3);
         }
     }
-    m.set(0,0,1);
+    m.set(0,1,-2);
     m.set(1,2,-3);
-    Sparse_Matrix<int>t = m.transposition_2();
-
+    Sparse_Matrix<int>t = m.transposition();
     for(int i = 0;i<3;i++){
         for(int j = 0;j<3;j++){
             EXPECT_EQ(m.get(j,i), t.get(i,j));

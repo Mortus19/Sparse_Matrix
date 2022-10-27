@@ -40,13 +40,9 @@ public:
     }
     Sparse_Matrix(Sparse_Matrix&& obj) noexcept
     {
-        size = obj.size;
-        nz = obj.nz;
-        val = obj.val;
-        row = obj.row;
-        col = obj.col;
-        row_index = obj.row_index;
-        obj.clear();
+        size = 0;
+        nz = 0;
+        swap(*this, obj);
     }
     void clear(){
         size = 0;
@@ -170,13 +166,8 @@ public:
     }
     Sparse_Matrix& operator=(Sparse_Matrix&& obj) noexcept
     {
-        size = obj.size;
-        nz = obj.nz;
-        val = obj.val;
-        row = obj.row;
-        col = obj.col;
-        row_index = obj.row_index;
-        obj.clear();
+        this->clear();
+        swap(*this, obj);
         return *this;
     }
     vector<T> operator*(vector<T>&b){
@@ -366,6 +357,15 @@ public:
         }
         result.row_index[size] = result.nz;
         return result;
+    }
+    friend void swap(Sparse_Matrix& lhs, Sparse_Matrix& rhs) noexcept
+    {
+        std::swap(lhs.size, rhs.size);
+        std::swap(lhs.nz, rhs.nz);
+        std::swap(lhs.val, rhs.val);
+        std::swap(lhs.row, rhs.row);
+        std::swap(lhs.col, rhs.col);
+        std::swap(lhs.row_index, rhs.row_index);
     }
     friend istream& operator>>(istream& in , Sparse_Matrix<T>&obj){
         int n;
