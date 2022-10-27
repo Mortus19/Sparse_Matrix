@@ -2,22 +2,22 @@
 #include "Sparse_Matrix.h"
 using namespace std;
 int main() {
-    Sparse_Matrix<int>m;
-    cin>>m;
-    Sparse_Matrix<int>tm = m.transposition();
-    vector<int>b = {1,2,3};
-    vector<int>res = m*b;
+    Sparse_Matrix<int>a(3);
+    Sparse_Matrix<int>b(3);
     for(int i = 0;i<3;i++){
-        cout<<res[i]<<' ';
+        for(int j = 0;j<3;j++){
+            a.set(i,j,((i+j)*4)%3);
+            b.set(i,j,((i+j)*7)%4);
+        }
     }
+    cout<<"a:\n";
+    cout<<a<<'\n';
     cout<<'\n';
+    cout<<"b:\n";
+    cout<<b<<'\n';
     cout<<'\n';
-    cout<<m<<'\n';
-    cout<<'\n';
-    cout<<tm<<'\n';
-
-    Sparse_Matrix<int>lol1 = m * m;
-    cout<<'\n';
-    cout<<lol1<<'\n';
+    cout<<"c = a + b:\n";
+    Sparse_Matrix<int>c = a + b;
+    cout<<c<<'\n';
     return 0;
 }
