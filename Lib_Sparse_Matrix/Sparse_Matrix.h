@@ -295,7 +295,7 @@ public:
         t.row_index[size] = t.nz;
         return t;
     }
-    Sparse_Matrix<T> transposition(){
+    Sparse_Matrix<T> transposition1(){
         //Будет работать за O(nz) , требует O(nz) памяти
         vector<vector<pair<int,T>>>tmp;
         tmp.resize(nz);
@@ -324,6 +324,34 @@ public:
         }
         t.row_index[size] = t.nz;
         return t;
+    }
+    Sparse_Matrix<T> transposition(){
+        //Транспонирование без лишней памяти ¯\_(ツ)_/¯
+        Sparse_Matrix<T> AT(*this);
+        for(int i = 0;i<=size;i++){
+            AT.row_index[i] = 0;
+        }
+        for(int i = 0;i<nz;i++){
+            AT.row_index[col[i]+1]++;
+        }
+        int s = 0;int tmp;
+        for(int i = 1;i<=size;i++){
+            tmp = AT.row_index[i];
+            AT.row_index[i] = s;
+            s+=tmp;
+        }
+        for(int i = 0;i<size;i++){
+            int start = row_index[i];
+            int finish = row_index[i+1];
+            for(int j = start;j<finish;j++){
+                int index = AT.row_index[col[j]+1];
+                AT.val[index] = val[j];
+                AT.row[index] = col[j];
+                AT.col[index] = row[j];
+                AT.row_index[col[j]+1]++;
+            }
+        }
+        return AT;
     }
     Sparse_Matrix<T> operator*(Sparse_Matrix<T>& m){
         if(m.size != size)
