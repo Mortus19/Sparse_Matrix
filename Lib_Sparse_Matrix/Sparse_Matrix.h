@@ -353,7 +353,9 @@ public:
         }
         return AT;
     }
+    /*
     Sparse_Matrix<T> operator*(Sparse_Matrix<T>& m){
+        //Наивная оптимизация
         if(m.size != size)
             throw exception();
         Sparse_Matrix<T> tm = m.transposition();
@@ -384,6 +386,43 @@ public:
             }
         }
         result.row_index[size] = result.nz;
+        return result;
+    }
+    */
+    Sparse_Matrix<T> operator*(Sparse_Matrix<T>& B){
+        //Алгоритмическая оптимизация Подход 2
+        if(B.size != size)
+            throw exception();
+        Sparse_Matrix<T>BT = B.transposition();
+        vector<int>tmp;
+        Sparse_Matrix<T>result(size);
+        int start,finish,aind;
+        T Neutral_element{};
+        for(int i = 0;i<size;i++){
+            tmp.resize(size,-1);
+            start = row_index[i];
+            finish = row_index[i+1];
+            for(int j = start;j<finish;j++){
+                tmp[col[j]] = j;
+            }
+            //Построен портрет строки i
+            //надо её умножить на каждую из строк матрицы BT
+            for(int j = 0;j<size;j++){
+                T sum{};
+                for(int k = BT.row_index[j];k<BT.row_index[j+1];k++){
+                    aind = tmp[BT.col[k]];
+                    if(tmp[BT.col[k]] != -1)
+                        sum+= val[aind] * BT.val[k];
+                }
+                if(sum!=Neutral_element){
+                    result.nz++;
+                    result.row.push_back(i);
+                    result.col.push_back(j);
+                    result.val.push_back(sum);
+                }
+            }
+            result.row_index[i+1] = result.nz;
+        }
         return result;
     }
     friend void swap(Sparse_Matrix& lhs, Sparse_Matrix& rhs) noexcept
