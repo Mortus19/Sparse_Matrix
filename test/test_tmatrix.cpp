@@ -1,4 +1,4 @@
-#include "Sparse_Matrix.h"
+#include "../samples/Sparse_Matrix.h"
 
 #include <gtest.h>
 
@@ -267,7 +267,6 @@ TEST(Sparse_Matrix, can_multiply_matrices_with_equal_size)
         }
     }
     Sparse_Matrix<int>m2 = m*m1;
-    cout<<m2<<'\n';
     for(int i = 0;i<2;i++){
         for(int j = 0;j<2;j++){
             int val = 0;
