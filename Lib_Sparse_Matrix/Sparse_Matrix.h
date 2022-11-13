@@ -272,7 +272,6 @@ public:
     }
     Sparse_Matrix<T> transposition_2(){
         //Будет работать за O(nz * ln(nz)) Требует O(nz) памяти
-        //так как мы транспонируем матрицу , то row[index] будет col[index] , а col[index] будет row[index]
         vector<vector<int>>tmp(nz);// будет хранить 3 элемента {index , row[index], col[index]};
         for(int i = 0;i<nz;i++){
             tmp[i] = {i ,col[i], row[i]};
@@ -326,7 +325,7 @@ public:
         return t;
     }
     Sparse_Matrix<T> transposition(){
-        //Транспонирование без лишней памяти ¯\_(ツ)_/¯
+        //Транспонирование за О(nz) без выделения лишней памяти ¯\_(ツ)_/¯
         Sparse_Matrix<T> AT(*this);
         for(int i = 0;i<=size;i++){
             AT.row_index[i] = 0;
@@ -390,7 +389,7 @@ public:
     }
     */
     Sparse_Matrix<T> operator*(Sparse_Matrix<T>& B){
-        //Алгоритмическая оптимизация Подход 2
+        //Алгоритмическая оптимизация c портретом строки матрицы this
         if(B.size != size)
             throw exception();
         Sparse_Matrix<T>BT = B.transposition();
@@ -519,6 +518,28 @@ public:
             row_index[i]+=row_index[i-1];
         }
     }
+    void SimbolicAdd(Sparse_Matrix<T>&A , Sparse_Matrix<T>&B){
+        //Есть ли смысл реализовывать? Все равно пушбеки остануться
+        /*
+        int l = 0;
+        int r = 0;
+        while(true){
+            if(l== A.size && r==B.size){
+                break;
+            }
+            nz++;
+            if(l == A.size){
+                row.push_back(B.row[r]);
+                col.push_back(B.col[r]);
+            }
+            else if(r == B.size){
+                row.push_back(A.row[r]);
+                col.push_back(A.col[r]);
+            }
+        }
+        */
+    }
+    void NumericAdd(Sparse_Matrix<T>&A , Sparse_Matrix<T>&B){}
 
     friend void swap(Sparse_Matrix& lhs, Sparse_Matrix& rhs) noexcept
     {
