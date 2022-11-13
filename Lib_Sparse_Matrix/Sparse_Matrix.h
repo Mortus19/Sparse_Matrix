@@ -425,6 +425,101 @@ public:
         }
         return result;
     }
+    void SimbolicMult(Sparse_Matrix<T>&A ,Sparse_Matrix<T>&B){
+        //Строим портрет матрицы умножения матриц А,B
+        if(B.size != A.size)
+            throw exception();
+        this->clear();
+        row_index.resize(A.size+1,0);
+        size = A.size;
+        Sparse_Matrix<T>BT = B.transposition();
+        vector<int>tmp(size,-1);
+        int start,finish,aind;
+        for(int i = 0;i<A.size;i++){
+            for(int j = 0;j<size;j++)
+                tmp[j] = -1;
+            start = A.row_index[i];
+            finish = A.row_index[i+1];
+            for(int j = start;j<finish;j++){
+                tmp[A.col[j]] = j;
+            }
+            //Построен портрет строки i
+            //надо её умножить на каждую из строк матрицы BT
+            for(int j = 0;j<A.size;j++){
+                bool Find = false;
+                int k = BT.row_index[j];aind = -1;
+                while(aind == -1 && k < BT.row_index[j+1]){
+                    aind = tmp[BT.col[k]];
+                    k++;
+                }
+                if(aind != -1){
+                    nz++;
+                    row.push_back(i);
+                    col.push_back(j);
+                }
+            }
+            row_index[i+1] = nz;
+        }
+    }
+    void NumericMult(Sparse_Matrix<T>&A ,Sparse_Matrix<T>&B){
+        //Матрицы А,В - это матрицы которые надо перемножить
+        //this - уже сформированный партрет умножения этих матриц
+        if(B.size != A.size || B.size != size)
+            throw exception();
+        Sparse_Matrix<T>BT = B.transposition();
+        Sparse_Matrix res(*this);
+        vector<int>tmp(A.size,-1);
+        res.val.resize(nz);
+        int start,finish,aind,index,cnt_non_neutral;
+        T Neutral_elem{};
+        cnt_non_neutral = index = 0;
+        for(int i = 0;i<res.size;i++){
+            start = res.row_index[i];
+            finish = res.row_index[i+1];
+            if(start<finish){
+                for(int j = 0;j<size;j++)
+                    tmp[j] = -1;
+            }
+            for(int j = A.row_index[i];j<A.row_index[i+1];j++){
+                tmp[A.col[j]] = j;
+            }
+            //Портрет строки i матрицы А построен
+            //Умножаем строку i матрицы А на столбцы матрицы В
+            for(int j = start;j<finish;j++){
+                T sum{};
+                for(int k = BT.row_index[res.col[j]];k<BT.row_index[res.col[j]+1];k++){
+                    aind = tmp[BT.col[k]];
+                    if(aind!=-1)
+                        sum+=A.val[aind]*B.val[k];
+                }
+                if(sum!=Neutral_elem)
+                    cnt_non_neutral++;
+                res.val[index] = sum;
+                index++;
+            }
+        }
+        nz = cnt_non_neutral;
+        val.resize(cnt_non_neutral);
+        col.resize(cnt_non_neutral);
+        row.resize(cnt_non_neutral);
+        for(int i = 0;i<=size;i++){
+            row_index[i] = 0;
+        }
+        index = 0;
+        for(int i = 0;i<res.nz;i++){
+            if(res.val[i] != Neutral_elem){
+                val[index] = res.val[i];
+                col[index] = res.col[i];
+                row[index] = res.row[i];
+                row_index[res.row[i] + 1]++;
+                index++;
+            }
+        }
+        for(int i = 1;i<=size;i++){
+            row_index[i]+=row_index[i-1];
+        }
+    }
+
     friend void swap(Sparse_Matrix& lhs, Sparse_Matrix& rhs) noexcept
     {
         std::swap(lhs.size, rhs.size);

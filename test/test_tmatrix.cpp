@@ -267,6 +267,34 @@ TEST(Sparse_Matrix, can_multiply_matrices_with_equal_size)
         }
     }
     Sparse_Matrix<int>m2 = m*m1;
+    cout<<m2<<'\n';
+    for(int i = 0;i<2;i++){
+        for(int j = 0;j<2;j++){
+            int val = 0;
+            for(int k = 0;k<2;k++){
+                val += m.get(i,k) * m1.get(k,j);
+            }
+            EXPECT_EQ(val , m2.get(i,j));
+        }
+    }
+}
+
+TEST(Sparse_Matrix, can_multiply_matrices_with_equal_size_two_phase)
+{
+    Sparse_Matrix<int>m(2);
+    Sparse_Matrix<int>m1(2);
+    int tmp;
+    for(int i = 0;i<2;i++){
+        for(int j = 0;j<2;j++){
+            tmp = i+j;
+            m.set(i,j,tmp);
+            tmp = 2 + i + j;
+            m1.set(i,j,tmp);
+        }
+    }
+    Sparse_Matrix<int>m2;
+    m2.SimbolicMult(m,m1);
+    m2.NumericMult(m,m1);
     for(int i = 0;i<2;i++){
         for(int j = 0;j<2;j++){
             int val = 0;
