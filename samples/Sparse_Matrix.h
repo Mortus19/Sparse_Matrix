@@ -4,6 +4,7 @@
 
 using namespace std;
 
+
 constexpr int MAX_MATRIX_SIZE = 1000000;
 
 template<class T>
@@ -346,8 +347,7 @@ public:
         if(B.size != A.size)
             throw exception();
         this->clear();
-        row_index.resize(A.size+1,0);
-        size = A.size;
+        row_index.resize(A.size+1,0);size = A.size;
         Sparse_Matrix<T>BT = B.transposition();
         vector<int>tmp(size,-1);
         int start,finish,aind;
