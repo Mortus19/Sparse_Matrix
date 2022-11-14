@@ -211,118 +211,79 @@ public:
         if(size != m.size)
             throw exception();
         Sparse_Matrix<T>t(size);
-        int l = 0;
-        int r = 0;
-        t.row_index.resize(size+1,0);
-        while(l < nz && r<m.nz){
-            if(row[l] == m.row[r] && col[l] == m.col[r]){
+        int l,r,index,maxsize;l = r = index =0;
+        maxsize = min(size*size , nz + m.nz);
+        t.row.resize(maxsize);
+        t.col.resize(maxsize);
+        t.val.resize(maxsize);
+        T Neutral_Element{};
+        while(true){
+            if(l == nz && r == m.nz)
+                break;
+            if(l == nz){
+                t.val[index] = (m.val[r]);
+                t.row[index] = (m.row[r]);
+                t.col[index] = (m.col[r]);
+                t.nz++;r++;
+            }
+            else if(r == m.nz){
+                t.val[index] = (val[l]);
+                t.row[index] = (row[l]);
+                t.col[index] = (col[l]);
+                t.nz++;l++;
+            }
+            else if(row[l] == m.row[r] && col[l] == m.col[r]){
                 T value = val[l] + m.val[r];
-                if(value != T{}) {
-                    t.val.push_back(value);
-                    t.row.push_back(row[l]);
-                    t.col.push_back(col[l]);
+                if(value != Neutral_Element) {
+                    t.val[index] = (value);
+                    t.row[index] = (row[l]);
+                    t.col[index] = (col[l]);
                     t.nz++;
                 }
                 r++;
                 l++;
             }
             else if(row[l] < m.row[r] || (row[l] == m.row[r] && col[l] < m.col[r])){
-                t.val.push_back(val[l]);
-                t.row.push_back(row[l]);
-                t.col.push_back(col[l]);
-                t.nz++;
-                l++;
+                t.val[index] = (val[l]);
+                t.row[index] = (row[l]);
+                t.col[index] = (col[l]);
+                t.nz++;l++;
             }
             else{
-                t.val.push_back(m.val[r]);
-                t.row.push_back(m.row[r]);
-                t.col.push_back(m.col[r]);
-                t.nz++;
-                r++;
+                t.val[index] = (m.val[r]);
+                t.row[index] = (m.row[r]);
+                t.col[index] = (m.col[r]);
+                t.nz++;r++;
             }
+            index++;
         }
-        while(l < nz){
-            t.val.push_back(val[l]);
-            t.row.push_back(row[l]);
-            t.col.push_back(col[l]);
-            t.nz++;
-            l++;
+        Sparse_Matrix<T>res(size);
+        res.nz = t.nz;
+        res.val.resize(nz);
+        res.row.resize(nz);
+        res.col.resize(nz);
+        index = 0;
+        for(int i = 0;i<res.nz;i++){
+            if(t.val[i] == Neutral_Element)continue;
+            res.val[index] = t.val[i];
+            res.row[index] = t.row[i];
+            res.col[index] = t.col[i];
+            index++;
         }
-        while(r < m.nz){
-            t.val.push_back(m.val[r]);
-            t.row.push_back(m.row[r]);
-            t.col.push_back(m.col[r]);
-            t.nz++;
-            r++;
-        }
-        t.row_index[0] = 0;
-        int index = 0;
-        for(int i = 0;i<t.size;i++){
-            while(index < t.nz && t.row[index] < i) {
+        index = 0;
+        res.row_index[0] = 0;
+        for(int i = 0;i<res.size;i++){
+            while(index < res.nz && res.row[index] < i) {
                 index++;
             }
-            t.row_index[i] = index;
+            res.row_index[i] = index;
         }
-        t.row_index[size] = t.nz;
-        return t;
+        res.row_index[size] = t.nz;
+        return res;
     }
     Sparse_Matrix<T> operator-(Sparse_Matrix<T>&m ){
         Sparse_Matrix<T> tmp = m * (-1.0);
         return ( (*this) + (tmp) );
-    }
-    Sparse_Matrix<T> transposition_2(){
-        //Будет работать за O(nz * ln(nz)) Требует O(nz) памяти
-        vector<vector<int>>tmp(nz);// будет хранить 3 элемента {index , row[index], col[index]};
-        for(int i = 0;i<nz;i++){
-            tmp[i] = {i ,col[i], row[i]};
-        }
-        sort(tmp.begin() , tmp.end() , cmp);
-        Sparse_Matrix<T>t(*this);
-        for(int i = 0;i<nz;i++){
-            t.val[i] = val[tmp[i][0]];
-            t.row[i] = tmp[i][1];
-            t.col[i] = tmp[i][2];
-        }
-        t.row_index[0] = 0;
-        int index = 0;
-        for(int i = 0;i<t.size;i++){
-            while(index < t.nz && t.row[index] < i) {
-                index++;
-            }
-            t.row_index[i] = index;
-        }
-        t.row_index[size] = t.nz;
-        return t;
-    }
-    Sparse_Matrix<T> transposition1(){
-        //Будет работать за O(nz) , требует O(nz) памяти
-        vector<vector<pair<int,T>>>tmp;
-        tmp.resize(nz);
-        for(int i = 0;i<nz;i++){
-            int to = col[i];
-            int new_col = row[i];
-            tmp[to].push_back({new_col,val[i]});
-        }
-        Sparse_Matrix<T>t(*this);
-        int cur = 0;
-        for(int i = 0;i<nz;i++){
-            for(auto x : tmp[i]){
-                t.val[cur] = x.second;
-                t.row[cur] = i;
-                t.col[cur] = x.first;
-                cur++;
-            }
-        }
-        t.row_index[0] = 0;
-        int index = 0;
-        for(int i = 0;i<t.size;i++){
-            while(index < t.nz && t.row[index] < i) {
-                index++;
-            }
-            t.row_index[i] = index;
-        }
-        t.row_index[size] = t.nz;
-        return t;
     }
     Sparse_Matrix<T> transposition(){
         //Транспонирование за О(nz) без выделения лишней памяти ¯\_(ツ)_/¯
@@ -352,42 +313,6 @@ public:
         }
         return AT;
     }
-    /*
-    Sparse_Matrix<T> operator*(Sparse_Matrix<T>& m){
-        //Наивная оптимизация
-        if(m.size != size)
-            throw exception();
-        Sparse_Matrix<T> tm = m.transposition();
-        Sparse_Matrix<T> result(size);
-        T Neutral_element{};
-        for(int i = 0;i<size;i++){
-            result.row_index[i] = result.nz;
-            for(int j = 0;j<size;j++){
-                T res_i_j{};
-                int l = row_index[i];
-                int r = tm.row_index[j];
-                while(l < row_index[i+1] && r<tm.row_index[j+1]){
-                    if(col[l] == tm.col[r]){
-                        res_i_j+= val[l] * tm.val[r];
-                        l++;
-                        r++;
-                    }
-                    else if(col[l] < tm.col[r])
-                        l++;
-                    else if(col[l] > tm.col[r])
-                        r++;
-                }
-                if(res_i_j == Neutral_element)continue;
-                result.val.push_back(res_i_j);
-                result.row.push_back(i);
-                result.col.push_back(j);
-                result.nz++;
-            }
-        }
-        result.row_index[size] = result.nz;
-        return result;
-    }
-    */
     Sparse_Matrix<T> operator*(Sparse_Matrix<T>& B){
         //Алгоритмическая оптимизация c портретом строки матрицы this
         if(B.size != size)
@@ -519,28 +444,117 @@ public:
         }
     }
     void SimbolicAdd(Sparse_Matrix<T>&A , Sparse_Matrix<T>&B){
-        //Есть ли смысл реализовывать? Все равно пушбеки остануться
-        /*
-        int l = 0;
-        int r = 0;
+        //Строим шаблон сложения матриц
+        if(A.size!=B.size)
+            throw exception();
+        this->clear();
+        size = A.size;nz = 0;
+        row_index.resize(size+1);
+        int maxsize = min(A.size+B.size , size*size);
+        col.resize(maxsize);row.resize(maxsize);
+        int l = 0;int r = 0;
         while(true){
-            if(l== A.size && r==B.size){
+            if(l== A.nz && r==B.nz){
                 break;
             }
-            nz++;
-            if(l == A.size){
-                row.push_back(B.row[r]);
-                col.push_back(B.col[r]);
+            if(l == A.nz){
+                row[nz] = B.row[r];
+                col[nz] = B.col[r];
+                r++;
             }
-            else if(r == B.size){
-                row.push_back(A.row[r]);
-                col.push_back(A.col[r]);
+            else if(r == B.nz) {
+                row[nz] = (A.row[l]);
+                col[nz] = (A.col[l]);
+                l++;
+            }
+            else if(A.row[l] == B.row[r] && A.col[l] == B.col[r]){
+                row[nz] = A.row[l];
+                col[nz] = A.col[l];
+                l++;
+                r++;
+            }
+            else if(A.row[l] < B.row[r] || (A.row[l] == B.row[r] && A.col[l]<B.col[r])){
+                row[nz] = (A.row[l]);
+                col[nz] = (A.col[l]);
+                l++;
+            }
+            else if(A.row[l] > B.row[r] ||(A.row[l] == B.row[r] && A.col[l]>B.col[r])){
+                row[nz] = (B.row[r]);
+                col[nz] = (B.col[r]);
+                r++;
+            }
+            nz++;
+        }
+        row_index[0] = 0;
+        int index = 0;
+        for(int i = 0;i<size;i++){
+            while(index < nz && row[index] < i) {
+                index++;
+            }
+            row_index[i] = index;
+        }
+        row_index[size] = nz;
+    }
+    void NumericAdd(Sparse_Matrix<T>&A , Sparse_Matrix<T>&B){
+        //this - это уже построенный портрет матрицы
+        Sparse_Matrix<T>res(*this);
+        res.val.resize(res.nz);int l,r,cnt_non_zero;
+        int index = 0;cnt_non_zero = 0;
+        for(int i = 0;i<size;i++){
+            l = A.row_index[i];r = B.row_index[i];
+            while(true){
+                if(l == A.row_index[i+1] && r == B.row_index[i+1]){
+                    break;
+                }
+                if(l == A.row_index[i+1]){
+                    res.val[index]=B.val[r];
+                    r++;
+                }
+                else if(r == B.row_index[i+1]){
+                    res.val[index]=A.val[l];
+                    l++;
+                }
+                else if(A.col[l] == B.col[r]){
+                    res.val[index] = A.val[l] + B.val[r];
+                    l++;r++;
+                }
+                else if(A.col[l] > B.col[r]){
+                    res.val[index] = B.val[r];
+                    r++;
+                }
+                else{
+                    res.val[index] = A.val[l];
+                    l++;
+                }
+                index++;
             }
         }
-        */
+        T Neutral_Element{};
+        for(int i = 0;i<res.nz;i++){
+            if(res.val[i]!=Neutral_Element)
+                cnt_non_zero++;
+        }
+        index = 0;nz = cnt_non_zero;
+        val.resize(cnt_non_zero);
+        row.resize(cnt_non_zero);
+        col.resize(cnt_non_zero);
+        for(int i = 0;i<=size;i++){
+            row_index[i] = 0;
+        }
+        index = 0;
+        for(int i = 0;i<res.nz;i++){
+            if(res.val[i] != Neutral_Element){
+                val[index] = res.val[i];
+                col[index] = res.col[i];
+                row[index] = res.row[i];
+                row_index[res.row[i] + 1]++;
+                index++;
+            }
+        }
+        for(int i = 1;i<=size;i++){
+            row_index[i]+=row_index[i-1];
+        }
     }
-    void NumericAdd(Sparse_Matrix<T>&A , Sparse_Matrix<T>&B){}
-
     friend void swap(Sparse_Matrix& lhs, Sparse_Matrix& rhs) noexcept
     {
         std::swap(lhs.size, rhs.size);

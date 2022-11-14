@@ -218,6 +218,29 @@ TEST(Sparse_Matrix, can_add_matrices_with_equal_size)
     }
 }
 
+TEST(Sparse_Matrix, can_add_matrices_with_equal_size_two_phase)
+{
+    Sparse_Matrix<int>m(2);
+    Sparse_Matrix<int>m1(2);
+    int tmp;
+    for(int i = 0;i<2;i++){
+        for(int j = 0;j<2;j++){
+            tmp = i+j;
+            m.set(i,j,tmp);
+            tmp = 2 + i + j;
+            m1.set(i,j,tmp);
+        }
+    }
+    Sparse_Matrix<int>m2;
+    m2.SimbolicAdd(m,m1);
+    m2.NumericAdd(m,m1);
+    for(int i = 0;i<2;i++){
+        for(int j = 0;j<2;j++){
+            EXPECT_EQ(m.get(i,j) + m1.get(i,j), m2.get(i,j));
+        }
+    }
+}
+
 TEST(Sparse_Matrix, cant_add_matrices_with_not_equal_size)
 {
     Sparse_Matrix<int>m(2);
