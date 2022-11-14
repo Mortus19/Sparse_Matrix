@@ -6,14 +6,6 @@ using namespace std;
 
 constexpr int MAX_MATRIX_SIZE = 1000000;
 
-bool cmp(const vector<int>&a , const vector<int>&b){
-    //a[0] - index , a[1] - row[index], a[2] - col[index]
-    if(a[1] != b[1])
-        return a[1] < b[1];
-    return a[2]<b[2];
-    //Т.е сортируем сначала по убыванию строк, если строки равны, то по убыванию столбцов
-}
-
 template<class T>
 class Sparse_Matrix{
     int size;
