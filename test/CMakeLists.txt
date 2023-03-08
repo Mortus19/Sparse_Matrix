@@ -2,5 +2,6 @@ file(GLOB hdrs "*.h*") #Добавляем в переменную hdrs все �
 file(GLOB srcs "*.cpp")#Добавляем в переменную srcs все файлы с расширением .h
 
 add_executable(test ${srcs} ${hdrs}) #Создаем проект с именем test в него добавляются файлы из переменных ${srcs} , ${hdrs}
-target_include_directories(test PUBLIC ../Lib_Sparse_Matrix ../gtest)
-target_link_libraries(test Lib_Sparse_Matrix gtest)
+target_include_directories(test PUBLIC ../gtest)
+target_link_libraries(test gtest)
+include_directories(../samples)

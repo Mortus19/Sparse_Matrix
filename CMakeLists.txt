@@ -6,7 +6,6 @@ project(${PROJECT_NAME})#название проекта
 #include_directories(${CMAKE_CURRENT_SOURCE_DIR}/LibImage) #Добавляем директорию "${CMAKE_CURRENT_SOURCE_DIR}/LibImage" в дополняемые каталоги включаемых файлов
 #${CMAKE_CURRENT_SOURCE_DIR} - стандартная переменная с адресом рабочей директории
 
-add_subdirectory(Lib_Sparse_Matrix)
 add_subdirectory(samples)#основной исполняемый файл
 add_subdirectory(gtest)#библиотека тестирования
 add_subdirectory(test)#создает ещё один исполняемый файл с самими тестами
